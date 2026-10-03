@@ -7,14 +7,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "node --experimental-strip-types node_modules/eslint/bin/eslint.js --flag unstable_native_nodejs_ts_config . --max-warnings=0",
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
     "record:demo": "playwright test --config=playwright.demo.config.ts",
     "typecheck": "next typegen && tsc --noEmit",
-    "format": "prettier --write src tests *.ts *.mjs *.json",
-    "format:check": "prettier --check src tests *.ts *.mjs *.json"
+    "format": "prettier --write src tests *.ts *.json",
+    "format:check": "prettier --check src tests *.ts *.json"
   },
   "dependencies": {
     "lucide-react": "1.51.0",
