@@ -4,9 +4,11 @@ A modernized version of [sejr/react-messenger](https://github.com/sejr/react-mes
 
 ## Demo video
 
-[![Arabic commerce walkthrough on mobile](assets/demo/preview.gif)](assets/demo/mobile-commerce.mp4)
+[![Arabic commerce walkthrough in desktop and phone frames](assets/demo/device-preview.gif)](assets/demo/device-showcase.mp4)
 
-Watch the full recording: [Mobile (30 seconds)](assets/demo/mobile-commerce.mp4) · [Desktop (30 seconds)](assets/demo/desktop-commerce.mp4).
+Watch the full recording: [Device showcase (30 seconds)](assets/demo/device-showcase.mp4) · [Mobile](assets/demo/mobile-commerce.mp4) · [Desktop](assets/demo/desktop-commerce.mp4).
+
+The showcase places the real desktop and mobile recordings inside device frames. Click the preview to open the full video.
 
 Recorded from the working application: browse electronics, choose storage and multiple colors, select delivery and extras, enter sample customer details, review an order, and complete simulated payment. The walkthrough uses Arabic UI, fictional products, and demo mode. No real purchase or payment occurs. Both desktop and mobile walkthrough checks passed.
 

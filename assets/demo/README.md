@@ -4,6 +4,8 @@ Recorded on October 4, 2026 from commit `ffe8d4d`, using the production Next.js 
 
 - [Mobile MP4](mobile-commerce.mp4): 390 × 844, 29.48 seconds.
 - [Desktop MP4](desktop-commerce.mp4): 1280 × 800, 29.64 seconds.
+- [Device showcase MP4](device-showcase.mp4): 1600 × 1000, 29.48 seconds, with both recordings playing inside desktop and phone frames.
+- [Device preview](device-preview.gif) and [poster](device-poster.png): used to present the showcase in the main README.
 - [Animated preview](preview.gif): a 12-second mobile excerpt.
 - [Mobile chapters](mobile-chapters.json) and [desktop chapters](desktop-chapters.json): measured timestamps from each walkthrough, relative to test start; browser video begins slightly earlier.
 
