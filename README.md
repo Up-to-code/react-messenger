@@ -4,7 +4,7 @@ A modernized version of [sejr/react-messenger](https://github.com/sejr/react-mes
 
 ## Run locally
 
-Use Node.js 24 (recommended; `.nvmrc` included). Node.js 22.13 or newer is supported.
+Use Node.js 24.21.0 (`.nvmrc` included) and npm 12.2.0. Node.js 24.15.0–24.x or 26+ is required by npm 12.
 
 ```sh
 npm ci
@@ -187,4 +187,10 @@ Confirmed local orders can proceed to `/orders/[id]/payment`: a clearly labeled 
 
 ## TypeScript and formatting
 
-Application code, unit tests, and Playwright scenarios use TypeScript with strict checks. Shared types in `src/lib/types.ts` describe messages, commerce selections, orders, provider events, and archived threads. Incoming JSON remains runtime-validated. `npm run typecheck` checks the application and tests; `npm run format` formats code, and `npm run format:check` verifies formatting. `npm run check` runs formatting, lint, types, unit tests, and the production build.
+Application code, unit tests, and Playwright scenarios use TypeScript 6.0.3 with strict checks. Shared types in `src/lib/types.ts` describe messages, commerce selections, orders, provider events, and archived threads. Incoming JSON remains runtime-validated. `npm run typecheck` checks the application and tests; `npm run format` formats code, and `npm run format:check` verifies formatting. `npm run check` runs formatting, lint, types, unit tests, and the production build.
+
+## Verified dependency versions — October 4, 2026
+
+Next.js 16.3.8 and React/React DOM 19.3.0 are the current stable releases, verified against npm. All application routes use App Router under `src/app`, including the server API route handlers and dynamic order/payment pages. The typed Next.js configuration enables typed routes; type checking generates route types first. Lucide, Playwright, React types, Prettier, tsx, CrewAI, FastAPI and Uvicorn are already current. Node type definitions are updated to 26.6.4.
+
+TypeScript is upgraded to the newest version supported by the lint parser, 6.0.3. TypeScript 7.0.2 is available but the parser declares support below 6.1. ESLint remains at the newest compatible 9.x version, 9.39.5: Next.js’s React/import lint plugins exclude ESLint 10.12.0. These compatibility pins preserve the complete lint checks. Node.js 24.21.0 is the latest 24.x LTS runtime and supports the latest npm 12.2.0.

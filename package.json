@@ -12,7 +12,7 @@
     "test:e2e": "playwright test",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
     "record:demo": "playwright test --config=playwright.demo.config.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write src tests *.ts *.mjs *.json",
     "format:check": "prettier --check src tests *.ts *.mjs *.json"
   },
@@ -24,17 +24,17 @@
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
-    "@types/node": "24.19.1",
+    "@types/node": "26.6.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.8",
     "prettier": "3.9.9",
     "tsx": "4.23.15",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": "^24.15.0 || >=26.0.0"
   },
-  "packageManager": "npm@11.13.0"
+  "packageManager": "npm@12.2.0"
 }
