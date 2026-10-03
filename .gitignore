@@ -21,3 +21,22 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Next.js and browser checks
+/.next/
+/out/
+/playwright-report/
+/test-results/
+*.tsbuildinfo
+next-env.d.ts
+
+# Provider settings remain local
+.env
+.env.*
+!.env.example
+
+# Isolated Python agent service
+.venv/
+__pycache__/
+*.pyc
+.data/

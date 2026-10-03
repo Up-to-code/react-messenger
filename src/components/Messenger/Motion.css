@@ -1,0 +1,95 @@
+.messenger {
+  --motion-duration: 620ms;
+}
+.messenger[data-motion="slow"] {
+  --motion-duration: 1000ms;
+}
+.messenger[data-motion="quick"] {
+  --motion-duration: 360ms;
+}
+.motion-message .bubble {
+  animation: chat-pop var(--motion-duration) both;
+  transform-origin: bottom left;
+}
+.motion-message.mine .bubble {
+  transform-origin: bottom right;
+}
+[dir="rtl"] .motion-message .bubble {
+  transform-origin: bottom right;
+}
+[dir="rtl"] .motion-message.mine .bubble {
+  transform-origin: bottom left;
+}
+@keyframes chat-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.8);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.75, 1);
+  }
+  20% {
+    opacity: 0.2;
+    transform: translateY(14px) scale(0.8);
+    animation-timing-function: cubic-bezier(0.15, 0.8, 0.25, 1);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.025);
+    animation-timing-function: ease-in-out;
+  }
+  60% {
+    transform: translateY(1px) scale(0.985);
+  }
+  80% {
+    transform: translateY(0) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.focused-message .bubble {
+  box-shadow: 0 0 0 2px #1116;
+}
+.message-reference {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-top: 1px solid #ddd;
+  background: none;
+  color: inherit;
+  font-size: 11px;
+  padding: 10px 0 0;
+  margin-top: 12px;
+}
+.motion-options {
+  display: flex;
+  gap: 8px;
+}
+.modal .motion-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 400;
+}
+.modal .motion-options input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-message .bubble,
+  .product-tile {
+    animation: none !important;
+  }
+}
+.modal input[type="radio"],
+.modal input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+}

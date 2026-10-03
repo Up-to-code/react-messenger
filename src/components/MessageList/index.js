@@ -1,168 +1,246 @@
-import React, {useEffect, useState} from 'react';
-import Compose from '../Compose';
-import Toolbar from '../Toolbar';
-import ToolbarButton from '../ToolbarButton';
-import Message from '../Message';
-import moment from 'moment';
+import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import { Info, ArrowLeft, ArrowDown, History } from "lucide-react";
+import Compose from "../Compose";
+import Toolbar from "../Toolbar";
+import ToolbarButton from "../ToolbarButton";
+import Message from "../Message";
+import Presence, { TypingIndicator } from "../Presence";
+import { groupMessages } from "../../lib/messages";
+import { validSelection } from "../../lib/products";
+import { displayName, useLocale } from "../../lib/i18n";
+import "./MessageList.css";
 
-import './MessageList.css';
-
-const MY_USER_ID = 'apple';
-
-export default function MessageList(props) {
-  const [messages, setMessages] = useState([])
-
-  useEffect(() => {
-    getMessages();
-  },[])
-
-  
-  const getMessages = () => {
-     var tempMessages = [
-        {
-          id: 1,
-          author: 'apple',
-          message: 'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 2,
-          author: 'orange',
-          message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 3,
-          author: 'orange',
-          message: 'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 4,
-          author: 'apple',
-          message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 5,
-          author: 'apple',
-          message: 'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 6,
-          author: 'apple',
-          message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 7,
-          author: 'orange',
-          message: 'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 8,
-          author: 'orange',
-          message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 9,
-          author: 'apple',
-          message: 'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-          timestamp: new Date().getTime()
-        },
-        {
-          id: 10,
-          author: 'orange',
-          message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-          timestamp: new Date().getTime()
-        },
-      ]
-      setMessages([...messages, ...tempMessages])
-  }
-
-  const renderMessages = () => {
-    let i = 0;
-    let messageCount = messages.length;
-    let tempMessages = [];
-
-    while (i < messageCount) {
-      let previous = messages[i - 1];
-      let current = messages[i];
-      let next = messages[i + 1];
-      let isMine = current.author === MY_USER_ID;
-      let currentMoment = moment(current.timestamp);
-      let prevBySameAuthor = false;
-      let nextBySameAuthor = false;
-      let startsSequence = true;
-      let endsSequence = true;
-      let showTimestamp = true;
-
-      if (previous) {
-        let previousMoment = moment(previous.timestamp);
-        let previousDuration = moment.duration(currentMoment.diff(previousMoment));
-        prevBySameAuthor = previous.author === current.author;
-        
-        if (prevBySameAuthor && previousDuration.as('hours') < 1) {
-          startsSequence = false;
-        }
-
-        if (previousDuration.as('hours') < 1) {
-          showTimestamp = false;
-        }
-      }
-
-      if (next) {
-        let nextMoment = moment(next.timestamp);
-        let nextDuration = moment.duration(nextMoment.diff(currentMoment));
-        nextBySameAuthor = next.author === current.author;
-
-        if (nextBySameAuthor && nextDuration.as('hours') < 1) {
-          endsSequence = false;
-        }
-      }
-
-      tempMessages.push(
-        <Message
-          key={i}
-          isMine={isMine}
-          startsSequence={startsSequence}
-          endsSequence={endsSequence}
-          showTimestamp={showTimestamp}
-          data={current}
-        />
-      );
-
-      // Proceed to the next message.
-      i += 1;
-    }
-
-    return tempMessages;
-  }
-
-    return(
-      <div className="message-list">
-        <Toolbar
-          title="Conversation Title"
-          rightItems={[
-            <ToolbarButton key="info" icon="ion-ios-information-circle-outline" />,
-            <ToolbarButton key="video" icon="ion-ios-videocam" />,
-            <ToolbarButton key="phone" icon="ion-ios-call" />
-          ]}
-        />
-
-        <div className="message-list-container">{renderMessages()}</div>
-
-        <Compose rightItems={[
-          <ToolbarButton key="photo" icon="ion-ios-camera" />,
-          <ToolbarButton key="image" icon="ion-ios-image" />,
-          <ToolbarButton key="audio" icon="ion-ios-mic" />,
-          <ToolbarButton key="money" icon="ion-ios-card" />,
-          <ToolbarButton key="games" icon="ion-logo-game-controller-b" />,
-          <ToolbarButton key="emoji" icon="ion-ios-happy" />
-        ]}/>
-      </div>
+export default function MessageList({
+  conversation,
+  onSend,
+  onBack,
+  onInfo,
+  onThreads,
+  onPreview,
+  onPoll,
+  onBrowse,
+  onForward,
+  onDetails,
+  onProductAction,
+  onNavigate,
+  focusId,
+  onReact,
+  onVote,
+  onRetry,
+  busy,
+  onStop,
+  online,
+}) {
+  const { t } = useLocale();
+  const name = displayName(conversation, t);
+  const agent = conversation.kind === "agent";
+  const [reply, setReply] = useState(null);
+  const [showJump, setShowJump] = useState(false);
+  const scroller = useRef(null);
+  const nearBottom = useRef(true);
+  const last = conversation.messages.at(-1);
+  const optionState = useMemo(() => {
+    const sourceGroups = new Map(
+      conversation.messages.map((message) => [
+        message.id,
+        message.productCard?.groupId || message.id,
+      ]),
     );
+    const choices = new Map();
+    const variants = new Map();
+    const filters = new Map();
+    for (const message of conversation.messages) {
+      const card = message.productCard;
+      if (card?.type === "criterion") {
+        const previous = filters.get(card.groupId) || card.filters;
+        filters.set(card.groupId, {
+          ...previous,
+          ...(card.field === "price"
+            ? {
+                minPrice: card.filters.minPrice,
+                maxPrice: card.filters.maxPrice,
+              }
+            : { [card.field]: card.filters[card.field] }),
+        });
+      }
+      if (card?.type === "variant") variants.set(card.groupId, card.variant);
+      const action = message.interaction;
+      if (
+        action?.method === "selectProduct" &&
+        validSelection(action.payload?.selection)
+      )
+        choices.set(
+          sourceGroups.get(action.sourceId) || action.sourceId,
+          action.payload.selection,
+        );
+    }
+    return { choices, variants, filters };
+  }, [conversation.messages]);
+  useEffect(() => {
+    const element = scroller.current;
+    if (element && nearBottom.current) element.scrollTop = element.scrollHeight;
+  }, [conversation.messages.length, last?.message, conversation.typing, busy]);
+  useEffect(() => {
+    if (!focusId) return;
+    const frame = requestAnimationFrame(() =>
+      document.getElementById(`message-${focusId}`)?.scrollIntoView({
+        block: "center",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [focusId, conversation.messages.length]);
+  function submit(content) {
+    nearBottom.current = true;
+    return onSend(content);
+  }
+  return (
+    <section className="message-list" aria-label={t("messagesWith", { name })}>
+      <Toolbar
+        title={name}
+        subtitle={
+          <Presence
+            agent={agent}
+            online={online && (agent || conversation.online)}
+          />
+        }
+        leftItems={
+          <>
+            <ToolbarButton
+              icon={ArrowLeft}
+              label={t("back")}
+              className="mobile-back"
+              onClick={onBack}
+            />
+            {conversation.photo ? (
+              <Image
+                className="header-avatar"
+                src={conversation.photo}
+                alt=""
+                width={40}
+                height={40}
+              />
+            ) : (
+              <span
+                className="header-avatar header-initials"
+                aria-hidden="true"
+              >
+                {name[0]}
+              </span>
+            )}
+          </>
+        }
+        rightItems={
+          <>
+            {agent && (
+              <ToolbarButton
+                icon={History}
+                label={t("threads")}
+                onClick={onThreads}
+              />
+            )}
+            <ToolbarButton icon={Info} label={t("info")} onClick={onInfo} />
+          </>
+        }
+      />
+      <div
+        ref={scroller}
+        className="message-list-container"
+        role="log"
+        aria-label={t("history")}
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-busy={busy}
+        onScroll={(event) => {
+          const element = event.currentTarget;
+          const isNear =
+            element.scrollHeight - element.scrollTop - element.clientHeight <
+            80;
+          nearBottom.current = isNear;
+          setShowJump(!isNear);
+        }}
+      >
+        {groupMessages(conversation.messages).map((message) => (
+          <Message
+            key={message.data.id}
+            {...message}
+            busy={busy}
+            appliedSelection={optionState.choices.get(
+              message.data.productCard?.groupId || message.data.id,
+            )}
+            filterValues={optionState.filters.get(
+              message.data.productCard?.groupId,
+            )}
+            variantOverride={optionState.variants.get(
+              message.data.productCard?.groupId,
+            )}
+            conversationId={conversation.id}
+            focused={focusId === message.data.id}
+            onForward={() => onForward(message.data)}
+            onDetails={() => onDetails(message.data)}
+            onProductAction={(id, action) => {
+              nearBottom.current = true;
+              onProductAction(id, action);
+            }}
+            onNavigate={onNavigate}
+            onReply={() =>
+              setReply({
+                id: message.data.id,
+                name: message.isMine ? t("you") : name,
+                text: (
+                  message.data.message ||
+                  message.data.attachment?.name ||
+                  t("poll")
+                ).slice(0, 180),
+              })
+            }
+            onReact={(emoji) => onReact(message.data.id, emoji)}
+            onVote={(optionId) => onVote(message.data.id, optionId)}
+            onPreview={onPreview}
+            onRetry={() => onRetry(message.data.id)}
+          />
+        ))}
+        {conversation.typing && <TypingIndicator name={name} />}
+        {!agent && !conversation.messages.length && (
+          <p className="empty-state">{t("emptyChat", { name })}</p>
+        )}
+      </div>
+      {showJump && (
+        <button
+          type="button"
+          className="jump-latest"
+          aria-label={t("jumpLatest")}
+          onClick={() => {
+            nearBottom.current = true;
+            scroller.current.scrollTop = scroller.current.scrollHeight;
+            setShowJump(false);
+          }}
+        >
+          <ArrowDown size={18} />
+          {t("jumpLatest")}
+        </button>
+      )}
+      <Compose
+        onSend={submit}
+        reply={reply}
+        onCancelReply={() => setReply(null)}
+        onPoll={onPoll}
+        onBrowse={() => {
+          nearBottom.current = true;
+          onBrowse();
+        }}
+        busy={busy}
+        onStop={onStop}
+        onPreview={onPreview}
+        agent={agent}
+        queued={
+          agent &&
+          conversation.messages.some((message) => message.status === "queued")
+        }
+      />
+    </section>
+  );
 }

@@ -1,21 +1,29 @@
 .conversation-search {
-  padding: 10px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin: 0 18px 6px;
 }
-
+.conversation-search > svg {
+  position: absolute;
+  inset-inline-start: 12px;
+  color: #777777;
+}
 .conversation-search-input {
-  background: #f4f4f8;
-  padding: 8px 10px;
-  border-radius: 10px;
+  width: 100%;
+  background: #f6f6f6;
+  padding: 11px 12px;
+  padding-inline-start: 38px;
+  border-radius: 12px;
   border: none;
   font-size: 14px;
+  color: #111111;
 }
-
 .conversation-search-input::placeholder {
-  text-align: center;
+  color: #777777;
 }
-
-.conversation-search-input:focus::placeholder {
-  text-align: left;
+@media (max-width: 700px) {
+  .conversation-search-input {
+    font-size: 16px;
+  }
 }

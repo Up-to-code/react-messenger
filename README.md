@@ -1,167 +1,186 @@
-<p align="center">
-  <img src="./public/react-messenger.svg" height="150px" />
-  <h1 align="center">React Messenger</h1>  
-</p>
+# React Messenger — Next.js
 
-> This project uses React and CSS to recreate the Facebook Messenger web application. It is in its early stages but most of the building blocks are in place. **THIS IS NOT AN OFFICIAL FACEBOOK PRODUCT NOR IS IT MAINTAINED BY ANY FACEBOOK EMPLOYEES.**
+A modernized version of [sejr/react-messenger](https://github.com/sejr/react-messenger), retaining the original Messenger-inspired layout, reusable components, and grouped message bubbles. The original Git history and MIT license are preserved.
 
-<p align="center"><b><a href="https://zen-bell-45d9db.netlify.com/">CLICK HERE FOR A LIVE DEMO</a></b></p>
+## Run locally
 
-<p align="center">
-  <img src="./assets/react-messenger-screen.png" />
-</p>
+Use Node.js 24 (recommended; `.nvmrc` included). Node.js 22.13 or newer is supported.
 
-<hr />
+```sh
+npm ci
+npm run dev
+```
 
-## Available Components
+Open http://localhost:3000. For production:
 
-When using these components it is important to keep in mind that we are utilizing a few different dependencies to achieve a better user experience. Specifically:
+```sh
+npm run build
+npm start
+```
 
-- [Moment](https://momentjs.com/) for parsing JavaScript dates and printing them in a readable way.
-- [Shave](https://github.com/dollarshaveclub/shave) to trim long messages to maintain consistency amongst `ConversationListItem`.
-- [Axios](https://github.com/axios/axios) to facilitate HTTP requests (for messages, users, etc).
+`npm start` now runs the Next.js production server; use `npm run dev` for development. Deploy using any Node.js host that supports Next.js. No environment variables or external accounts are required for demo mode. Live assistant mode is optional and requires the server settings below.
 
-### Compose
+## What changed
 
-The Compose component allows the user to send messages and attachments.
+- Create React App and `react-scripts` replaced with the Next.js App Router and Turbopack.
+- React 16 replaced with React 19.3.0; Next.js 16.3.8 installed. Direct runtime packages use the latest stable npm versions checked on October 3, 2026.
+- Axios and runtime Random User API requests replaced with bundled demo contacts and local portraits, so the page can render on the server and run without a third-party API connection.
+- Moment replaced with native `Date` arithmetic and `Intl.DateTimeFormat`. UTC timestamps render consistently during server rendering and hydration.
+- Shave DOM mutation replaced with CSS ellipsis. The old Ionicons CDN font replaced with locally bundled Lucide SVG icons.
+- Obsolete ReactDOM initialization, CRA service worker, public HTML template, and stale Yarn lockfile removed. npm is the canonical package manager; `package-lock.json` has been regenerated.
+- Next.js metadata, manifest, optimized local contact images, accessible buttons, focus indicators, and native modal dialogs added.
+- Sidebar and messages scroll independently. The composer stays within the message panel. On narrow screens, select a conversation and use the back button to return to the list.
 
-| props | type | description |
-|-------|------|-------------|
-| `rightItems` | `ToolbarButton[]` | Icons that appear to the right of the `input` element allowing users to send more than text (e.g. photos, cash, location, etc). |
+## Messenger features
 
-### ConversationList
+- English and Arabic UI, an instant language switch, RTL layout, localized timestamps, and automatic direction for mixed-language messages and drafts.
+- A mobile composer that follows `visualViewport.height` and `offsetTop` when the keyboard opens or pans the page. Safe-area padding, dynamic viewport fallback, 16px inputs, and support for browser pinch zoom are retained.
+- Connection status from browser online/offline events. New messages queue in memory while offline and resume once on reconnection.
+- Sample online/away contact presence, animated typing, and sending/sent/delivered/read receipts. These people-chat states and replies are disclosed as simulations in Settings and conversation information.
+- Multiline composition (Enter sends, Shift + Enter adds a line), IME-safe Enter handling, bilingual emoji search, quoted replies, emoji reactions, and a jump-to-latest control.
+- Image attachments under 5 MB (JPG, PNG, WebP, GIF), a removable draft thumbnail, a separate image viewer, 100–300% zoom, and download.
+- Custom polls with 2–5 distinct options and one changeable local vote. Polls, presence, and media previews are separate reusable components.
+- Animated assistant typing and streamed text, Stop, partial-response retention, retryable errors, copy, and natural clarification questions. Reduced-motion preferences are respected.
 
-This is a simple component that renders `ConversationSearch` and uses `axios` to fetch users from the [Random User API](https://randomuser.me/).
+Messages, attachments, poll votes, product choices, and new contacts are saved in this browser using IndexedDB. Storage failures are shown in Settings, with a session-only fallback. Restoration keeps the most recent 500 messages per conversation. People chats do not deliver anything to another person. No calling, accounts or multi-user delivery service is implemented. Assistant transcripts also have a server-side SQLite demo archive, described below. The included contact names and portraits are sample data.
 
-### ConversationListItem
+## Optional real AI provider
 
-This component provides an overview of a single conversation, including a photo, name (or group title), and a snippet of the most recent message. We use `shave` to trim the displayed message so that all instances of `ConversationListItem` take up the same amount of vertical space.
+The assistant starts in **Demo** mode with language-aware sample replies. They are deterministic examples, not generated reasoning; demo mode does not inspect photo contents.
 
-| props | type | description |
-|-------|------|-------------|
-| `photo` | `String` | The URL of a photo to be displayed for the conversation. The demo uses the photo provided by the Random User API. |
-| `name` | `String` | The name of the conversation, whether it is a group or individual. |
-| `text` | `String` | The text of the most recent message; you do not have to truncate this yourself. |
+For a real assistant, copy `.env.example` to `.env.local` and set `AGENT_BACKEND=openai` and configure both values:
 
-### ConversationSearch
+```dotenv
+AGENT_BACKEND=openai
+OPENAI_API_KEY=your_server_api_key
+OPENAI_MODEL=a_responses_api_model_available_to_your_account
+```
 
-This is a simple `input` element that is styled to resemble the Facebook Messenger search bar. Its placeholder is centered until the input is focused, moving the placeholder to the left.
+Restart the server. The UI reads `/api/agent` to report the connection mode in conversation information; live mode requires both values. The selected model is entirely under your control; choose a vision-capable model to process photos. Do not put either value in a `NEXT_PUBLIC_` variable.
 
-### Message
+`POST /api/agent` accepts `{ locale, messages: [{ id?, role: 'user' | 'assistant', text, image? }] }` and returns newline-delimited JSON events: `mode`, `delta`, `card`, `reference`, `done`, or `error`. The transport uses [OpenAI's Responses streaming API](https://developers.openai.com/api/docs/guides/streaming-responses) and its [image input format](https://developers.openai.com/api/docs/guides/images-vision), with `store: false`, a bounded transcript, and a 60-second timeout. Client cancellation aborts the upstream request. Failures stay visible and retryable; they never silently fall back to a sample answer.
 
-Because most of the work is done by `MessageList`, this component is pretty straight-forward. As stated below, there are a lot of `props` which allow you to style distinct groups of messages.
+The provider receives up to 20 eligible messages (40,000 text characters), the latest two user images, stable message IDs, quoted/forwarded source references, and product-choice context. An older latest product choice is reserved as a compact memory entry when it falls outside the recent-message window. Provider credentials stay on the server. In live mode, assistant-chat content and included images are sent to the configured provider. People chats stay local. **Add application authentication and rate limiting before exposing a keyed endpoint publicly.** This workspace preview listens on loopback and uses demo mode.
 
-| props | type | description |
-|-------|------|-------------|
-| `data` | `Object` | An object containing information about the message. We use `data.message` for the message body and `data.timestamp` for the JavaScript Date object representing the time at which the message was sent. |
-| `isMine` | `Boolean` | Applies a tint to the message (`#007aff` in demo) and aligns it to the right, indicating that the message was sent by you. |
-| `startsSequence` | `Boolean` | Indicates that the message represents the start of a sequence of messages. This sets the appropriate top border radius, depending on whether the message was sent by you or someone else. |
-| `endsSequence` | `Boolean` | Indicates that the message represents the end of a sequence of messages. This sets the appropriate bottom border radius, depending on whether the message was sent by you or someone else. |
-| `showTimestamp` | `Boolean` | Determines whether or not the timestamp of the message should be shown. The demo app sets this value to `true` if more than one hour has passed between messages. |
+The live adapter is verified with mocked upstream streams, including provider errors and cancellation. No paid request or account/model availability check was performed.
 
-### MessageList
+## Structure for future agents and developers
 
-This is a deceptively-simple component that does a lot of the heavy lifting for rendering sequences of messages with appropriate styling (see `MessageList.renderMessages`). Specifically, we use information about the messages (`author` and `timestamp`) to render groups of messages closer together with modified border-radii and margin. This is not just present in Facebook Messenger, but in other apps like iMessage as well. You can remove this functionality if you want to.
+See `AGENTS.md` for the codebase guide. The immutable reducer is in `src/lib/chat-state.js`; orchestration is in `src/hooks/useMessenger.js`. Provider and stream-framing code are separate from rendering. `src/components/` contains the composer, emoji picker, poll composer/card, message actions, media viewer, and presence indicator. English/Arabic strings live in `src/lib/i18n.js`.
 
-### Messenger
+## Validation
 
-This component is essentially the wrapper for the web application. It defines a [CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) layout and exposes some helper classes (e.g. `scrollable`, allowing us to separate scrolling between the sidebar and content panes).
+```sh
+npm run check
+npx playwright install chromium webkit
+npm run test:e2e
+npm audit --omit=dev
+```
 
-### Toolbar
+`npm run check` combines linting, unit tests, and the production build. Browser tests run against a production server on port 3127 with provider keys disabled. They cover desktop Chromium, mobile Chromium, and mobile WebKit: search, separate histories, hydrated rendering, sending, photos, previews, polls, votes, replies, reactions, emoji, Arabic/RTL, offline/reconnect queues, assistant streaming, cancellation/retry, IME composition, reduced motion, product carousel indexing, comparison, independent storage/color messages and delivery/extras dialogs, forwarding/source navigation, and memory across reloads.
 
-The demo uses two toolbars which sit above the sidebar and content panes. This component displays a title and can also include buttons. The title remains centered within the Toolbar regardless of whether elements are present on either side.
+Keyboard tests focus the composer, shrink the viewport, and simulate separate visual-viewport height and top-offset changes. These verify keyboard layout behavior in browser automation; **a physical iOS/Android keyboard was not tested**.
 
-| props | type | description |
-|-------|------|-------------|
-| `title` | `String` | The title to be displayed in the center of the toolbar. |
-| `leftItems` | `ToolbarButton[]` | The `ToolbarButton` elements that should appear on the left side of the toolbar. |
-| `rightItems` | `ToolbarButton[]` | The `ToolbarButton` elements that should appear on the right side of the toolbar. |
+Unit tests cover message-group boundaries, immutable state updates, poll validation, bounded provider input, UTF-8 framing across stream chunks, cancellation, errors, route validation, product methods, presentation tools, memory restoration, and retained choice context. The latest run passed lint/build, 26 unit tests, and 56 browser tests; the desktop-only inapplicable mobile keyboard case is skipped.
 
+To record the customer-selection flow during verification, run `RECORD_DEMO_VIDEO=1 npm run test:e2e -- --project=desktop -g 'electronics choices use separate'`. The recording is written under `test-results/`; recording is disabled by default.
 
-### ToolbarButton
+## Dependency compatibility and audit
 
-Probably better described as an "icon button," it is just that -- a button that shows an icon. I will add accessibility considerations in time.
+Next.js and React are pinned to the latest stable versions available during this migration; the lockfile fixes transitive versions too. ESLint is pinned to **9.39.5**, the latest compatible 9.x release: Next.js 16.3.8’s React/import/accessibility plugins still declare ESLint 9 peer ranges, and ESLint 10.12.0 failed with `scopeManager.addGlobals is not a function`. ESLint 9 is now out of upstream support; update it when Next.js’s bundled lint plugins support ESLint 10.
 
-| props | type | description |
-|-------|------|-------------|
-| `icon` | `String` | The name of the icon to be represented via an icon font. I use [Ionicons](https://ionicons.com/) in the demo but this could easily be swapped out for [FontAwesome](https://fontawesome.com/) or a similar library. You can even make your own icon font at [Icomoon](https://icomoon.io/). |
+The production audit reports **zero vulnerabilities**. The full audit currently reports **five high-severity entries** stemming from one unpatched development-only `braces` advisory through Next.js’s ESLint plugin (`fast-glob → micromatch → braces`). The [upstream advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) lists no patched release. These packages are lint tooling, not production dependencies. Do not use `npm audit fix --force`, which proposes downgrading the Next.js ESLint configuration to version 14.2.35.
 
-<hr />
+## Source and license
 
-## Roadmap
+Original project by Sam Roth, based on commit `09922cd`. The MIT license is retained in `LICENSE`. Demo portraits were obtained from Random User (`https://randomuser.me/api/portraits/`); their source URLs are listed in `public/avatars/SOURCES.md`.
 
-This is a rather straight-forward library but I do plan to continue making improvements and adding features. If you would like to contribute, you are more than welcome to.
+This is an independent Messenger-inspired demo and is not affiliated with Meta/Facebook.
 
-- [ ] Media messages (e.g. photos, videos)
-- [ ] Tooltips, popovers, modals (for viewing options, sending new messages, etc)
-- [ ] Graceful degradation (network status indicator, loading spinners, etc)
-- [ ] Responsiveness
+## Messages design
 
-<hr />
+The chat uses the supplied monochrome reference: compact rows with timestamps and unread counts, black outgoing bubbles, white incoming bubbles, a floating new-chat button, and a small bottom navigation bar. The automated contact is named Noor (نور in Arabic), with no separate AI section, sparkle decoration, starter cards, or follow-up cards. Its automated identity and current demo/provider mode are disclosed in conversation information and Settings. Demo letter requests ask about the recipient and purpose before showing a scripted draft. Polls are available from More options in all conversations; votes are local and single-user.
 
-## Available Scripts
+The requested unslop runner was attempted with 20 visual samples and stopped before generation because Claude Code is not authenticated. The accompanying design profile is a manual review of the existing UI and supplied reference, not a statistical profile generated from 20 model outputs.
 
-In the project directory, you can run:
+## Interactive electronics mockup
 
-### `npm start`
+In Noor’s conversation, choose **More options → Browse products**, or send “Show me the electronics”. The catalog contains three fictional products with sample USD prices and generated studio images. This is a UI composition, not a vendor catalog, live inventory, cart checkout, payment flow, or ordering service.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Each role has its own component and method:
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+| Role                                    | Component                                        | Method                                    |
+| --------------------------------------- | ------------------------------------------------ | ----------------------------------------- |
+| Horizontal product collection           | `Products/ProductStrip`                          | `showProducts`                            |
+| Compare selected cards                  | `Products/ComparisonCard`                        | `compareProducts`                         |
+| Color swatches and variant text | `Products/ColorOptions` / `ProductOptionsDialog` | `selectProduct`                           |
+| Delivery radios                         | `ChoiceDialog` in single mode                    | `chooseDelivery`                          |
+| Extras checkboxes                       | `ChoiceDialog` in multiple mode                  | `chooseExtras`                            |
+| Review and save selection               | `Products/SelectionCard`                         | `confirmSelection`                        |
+| Poll creation and voting                | `PollComposer` / `PollCard`                      | Independent poll actions                  |
+| Forward a message or card               | `ForwardDialog`                                  | Send a new message with source provenance |
 
-### `npm test`
+Selections continue the conversation as new messages, with immutable snapshots so earlier choices remain readable. Every message has a stable ID, available under Message details. Forwarding creates a new ID, keeps the original conversation/message IDs, opens the destination conversation, and provides a link back to the source. The provider transcript includes these references as context. Natural demo questions such as “What did I choose?” recall the latest selected product and offer a link to its message.
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Live provider requests expose validated presentation functions for product lists, comparisons, multiple chat messages, and references to IDs in the supplied transcript. The implementation follows the [official OpenAI function-calling guide](https://developers.openai.com/api/docs/guides/function-calling), using strict schemas and completed streamed function-call items. UI tools finish the current turn; the customer’s next choice is sent as ordinary transcript context. Only configured provider models supporting Responses function tools can use them. Live calls remain untested with a paid model; injected streaming mocks cover tool results and validation.
 
-### `npm run build`
+New incoming/outgoing bubbles use staged 0/20/40/60/80/100% keyframes: quiet entry, faster arrival, small overshoot, then settling. Product cards enter with staggered delays. Settings selects Slow (1000ms), Standard (620ms), or Quick (360ms). Typing uses dots; there is no stream caret or custom scrollbar cursor. The carousel uses native scrolling, indexed previous/next buttons and a progress bar. Reduced-motion settings disable the entrance animations.
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Image prompts and saved asset paths are recorded in `docs/design/product-images.md`. They were generated with the built-in imagegen tool. Images depict the base finish; color choices are recorded in the swatch and selection data rather than simulated image recoloring.
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+## Situational choosing UI
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Conversation text stays in speech bubbles. Product details, storage numbers, colors, and filters sit directly on the chat canvas without white panels. Labels use regular weight. There is no large color ball. Small swatches support multiple check overlays, with a neutral Use selection action; no color is preselected on a fresh chooser. Existing saved choices restore. Product images keep their base finish.
 
-### `npm run eject`
+The multi-product toggle reveals check overlays above product images. Use products creates a separate selected list; Compare selected creates a comparison. Each product in the selected list has its own options action. Delivery, extras, and polls retain separate methods.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Product preferences is available in the composer menu or through ordinary chat. Price, colors, size/storage, type, and collections arrive as independent messages. Multiple options within a category match any selected value; different categories intersect. The example collections are Everyday, Work, and Travel. Find products searches the bundled fictional catalog and explicitly reports when no products match. Preferences persist, and the latest submitted preferences remain in the agent's bounded history after other topics.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The provider exposes validated `choose_product_filters` and `filter_products` functions, alongside product options, comparison, multiple messages, and source references. It selects ready UI components and uses catalog metadata; it never generates or executes arbitrary HTML or JavaScript. Demo mode uses scripted routing. Live calls remain verified with injected mocks rather than paid model requests.
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Record a real walkthrough
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+After building, run `npm run record:demo`. This opt-in workflow records desktop and mobile viewports in isolated browser contexts with no provider keys. The Arabic walkthrough records browsing, color/storage choice, delivery, extras, customer details, review, order confirmation, and demo payment. The recordings, final screenshots, and measured chapter timestamps are saved under `test-results/demo/`. These are recordings of the working application with fictional demo products, not generated video or real purchases. Reading pauses are intentional; normal browser verification does not include this recorder.
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Multiple messages per agent turn
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+One response can send several short text messages through `send_chat_messages` (two to six validated parts), separate Responses output items, or demo paragraph boundaries. The NDJSON transport emits `message_start` between parts. Every part has its own stable message ID and shares the user prompt and turn ID. Parts arrive in order, and Stop cancels pending parts.
 
-### Code Splitting
+Choosing product options sends a compact product message, a storage/size message, and a color swatch message in sequence, alongside a short introduction. Storage and color remain linked by an option group ID, while delivery, extras, and polls keep their own methods. Existing combined option cards migrate on reload while preserving their original source ID. These parts are saved locally and included in the agent transcript as structured context.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+### الطلب التجريبي بالعربية
 
-### Analyzing the Bundle Size
+العربية هي اللغة الافتراضية، ويُحفظ اختيار اللغة في المتصفح. الأمثلة والأسماء وأحجام المنتجات مترجمة. يرسل المساعد بطاقات مستقلة للتوصيل والإضافات وبيانات العميل، ثم بطاقة مراجعة تقود إلى `/orders/[id]`. تأكيد الطلب محلي وتجريبي، مع محاكاة دفع محلية دون خصم أموال أو اتصال بمتجر.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+تُحسب الأسعار من الكتالوج عند كل مراجعة: وحدة لكل لون محدد، والإضافات والتوصيل مرة واحدة لكل طلب. الأسعار بالدولار للعرض فقط. يُتحقق من الهاتف والعنوان وتاريخ الاستلام. تُحفظ بيانات العميل في المتصفح نفسه؛ سياق مزود المساعد يتضمن ملخص الاختيار والإجمالي دون الاسم أو الهاتف أو العنوان. يمكن للمساعد طلب بطاقة بيانات العميل عبر `collect_order_details` مع مرجع رسالة اختيار صحيحة. إعادة فتح الطلب تتطلب المتصفح نفسه.
 
-### Making a Progressive Web App
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+## OpenRouter and actual CrewAI service
 
-### Advanced Configuration
+Set `AGENT_BACKEND=demo` for scripted examples. Live OpenRouter uses `AGENT_BACKEND=openrouter`, `OPENROUTER_API_KEY`, and `OPENROUTER_MODEL` (the exact model identifier from your account). It streams Chat Completions with validated function tools. Select a model/provider supporting the required tool parameters; image support depends on that model.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+For CrewAI set the Next.js server's `AGENT_BACKEND=crewai`, `CREWAI_SERVICE_URL=http://127.0.0.1:8008`, and `CREWAI_SERVICE_TOKEN`. Start the private Python service with the same token and its own server-side `OPENROUTER_API_KEY` / `OPENROUTER_MODEL`:
 
-### Deployment
+```sh
+cd services/commerce-crew
+uv sync --locked --python 3.13
+uv run uvicorn app:app --host 127.0.0.1 --port 8008
+uv run python -m unittest test_crew.py
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+Provide credentials through your environment; never commit keys. Python 3.13 is pinned because this CrewAI version does not support 3.14. The service runs an actual sequential Crew: commerce advisor then response/UI reviewer, with validated Pydantic output. Each request is isolated, bounded, and canceled by terminating its worker when the client disconnects. Two workers can run at once; telemetry and implicit embedding memory are disabled. The current Crew route is text-only and explicitly rejects images. It waits for the validated final result before presenting separate messages and cards. Live key/model availability and reasoning quality have not been verified with paid requests. Mock tests execute a real Crew with a stub model. Use HTTPS for a remote private service. Missing settings or provider failures surface as errors, never silent demo replies.
 
-### `npm run build` fails to minify
+## SQLite threads and bounded context
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+`GET/POST /api/threads` persists sanitized assistant transcripts in `.data/threads.sqlite` (override with `THREAD_DB_PATH`). The HttpOnly SameSite owner cookie isolates browser archives; it is demo ownership, not account authentication. Back up the database if needed. Node's SQLite API may emit an experimental-feature warning. Recent rich messages/media stay in IndexedDB; the server archive stores text and structured card context without customer name, phone or address. Media blobs and the original interactive cards are not reconstructed from the text archive.
+
+The compact history keeps current choices/preferences/order status and recent turns. Earlier facts plus keyword matches from the archive can be supplied with source IDs, within 40 messages/40,000 characters. SQLite retains older records when new windows are saved. The memory dialog offers named threads, collapsible extracts, source navigation, search, and pagination. Selecting a server-only thread restores its latest 50 textual messages; earlier messages remain accessible in the archive. Current summaries are extractive and retrieval is lexical; semantic summarization, token-aware budgets and vector search are future work, not claimed capabilities. Do not replace the canonical archive with a model summary. Customer-form PII stays local, but user-written chat may contain personal data and is archived; add account authorization, retention/deletion, rate limits and consent controls before public deployment.
+
+## Arrival policy, generated choices and demo payment
+
+`src/lib/business-policy.js` configures demo preparation days, Cairo timezone, 14:00 cutoff, Sunday–Thursday business days, blackout dates and a 30-day horizon. Arrival is computed automatically; choosing a different available date is optional through the custom keyboard-accessible calendar. `dateSelection=auto` hides the override; `optional` is the shipped mode. The sample `required` layout opens the calendar but currently still accepts the estimated default, so explicit-selection enforcement needs a business adapter if required.
+
+`show_choices` renders situational radio/checkbox cards and `create_poll` renders a separate voting role. Both continue the conversation; selections have source IDs. Specific requests use known constraints; generic requests ask one useful question. These instructions guide the model; they are not a measured guarantee of live reasoning quality.
+
+Confirmed local orders can proceed to `/orders/[id]/payment`: a clearly labeled simulated card payment or cash-on-delivery choice, saved receipt, reload restoration, and payment status in subsequent agent context. No payment credentials are requested. Real checkout, stock reservation, tax, shipping quotes, coupons, multiple distinct-product cart lines, authenticated customers, webhooks, fulfillment, cancellation and refunds still require commerce services. See the Arabic research report delivered next to this repository for protocol references and a prioritized implementation plan.
