@@ -2,6 +2,16 @@
 
 A modernized version of [sejr/react-messenger](https://github.com/sejr/react-messenger), retaining the original Messenger-inspired layout, reusable components, and grouped message bubbles. The original Git history and MIT license are preserved.
 
+## Demo video
+
+[![Arabic commerce walkthrough on mobile](assets/demo/preview.gif)](assets/demo/mobile-commerce.mp4)
+
+Watch the full recording: [Mobile (30 seconds)](assets/demo/mobile-commerce.mp4) · [Desktop (30 seconds)](assets/demo/desktop-commerce.mp4).
+
+Recorded from the working application: browse electronics, choose storage and multiple colors, select delivery and extras, enter sample customer details, review an order, and complete simulated payment. The walkthrough uses Arabic UI, fictional products, and demo mode. No real purchase or payment occurs. Both desktop and mobile walkthrough checks passed.
+
+Recording details and chapter timestamps: [demo assets](assets/demo/README.md). Re-record with `npm run build` followed by `npm run record:demo -- --workers=1`.
+
 ## Run locally
 
 Use Node.js 24.21.0 (`.nvmrc` included) and npm 12.2.0. Node.js 24.15.0–24.x or 26+ is required by npm 12.
