@@ -188,7 +188,3 @@ Confirmed local orders can proceed to `/orders/[id]/payment`: a clearly labeled 
 ## TypeScript and formatting
 
 Application code, unit tests, and Playwright scenarios use TypeScript with strict checks. Shared types in `src/lib/types.ts` describe messages, commerce selections, orders, provider events, and archived threads. Incoming JSON remains runtime-validated. `npm run typecheck` checks the application and tests; `npm run format` formats code, and `npm run format:check` verifies formatting. `npm run check` runs formatting, lint, types, unit tests, and the production build.
-
-## Netlify deployment
-
-`netlify.toml` overrides the original Create React App settings with `npm run build`, `.next`, and Node.js 24. Netlify automatically applies its Next.js adapter. Deploy previews use the local demo backend. The Python CrewAI service must be deployed separately for live CrewAI mode. SQLite archives need durable storage for production; Netlify function filesystems do not provide durable local database storage. Browser conversations and demo orders still use local browser storage.
