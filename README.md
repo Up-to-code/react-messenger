@@ -66,7 +66,7 @@ The live adapter is verified with mocked upstream streams, including provider er
 
 ## Structure for future agents and developers
 
-See `AGENTS.md` for the codebase guide. The immutable reducer is in `src/lib/chat-state.js`; orchestration is in `src/hooks/useMessenger.js`. Provider and stream-framing code are separate from rendering. `src/components/` contains the composer, emoji picker, poll composer/card, message actions, media viewer, and presence indicator. English/Arabic strings live in `src/lib/i18n.js`.
+See `AGENTS.md` for the codebase guide. The immutable reducer is in `src/lib/chat-state.ts`; orchestration is in `src/hooks/useMessenger.ts`. Provider and stream-framing code are separate from rendering. `src/components/` contains the composer, emoji picker, poll composer/card, message actions, media viewer, and presence indicator. English/Arabic strings live in `src/lib/i18n.ts`.
 
 ## Validation
 
@@ -179,8 +179,12 @@ The compact history keeps current choices/preferences/order status and recent tu
 
 ## Arrival policy, generated choices and demo payment
 
-`src/lib/business-policy.js` configures demo preparation days, Cairo timezone, 14:00 cutoff, Sunday–Thursday business days, blackout dates and a 30-day horizon. Arrival is computed automatically; choosing a different available date is optional through the custom keyboard-accessible calendar. `dateSelection=auto` hides the override; `optional` is the shipped mode. The sample `required` layout opens the calendar but currently still accepts the estimated default, so explicit-selection enforcement needs a business adapter if required.
+`src/lib/business-policy.ts` configures demo preparation days, Cairo timezone, 14:00 cutoff, Sunday–Thursday business days, blackout dates and a 30-day horizon. Arrival is computed automatically; choosing a different available date is optional through the custom keyboard-accessible calendar. `dateSelection=auto` hides the override; `optional` is the shipped mode. The sample `required` layout opens the calendar but currently still accepts the estimated default, so explicit-selection enforcement needs a business adapter if required.
 
 `show_choices` renders situational radio/checkbox cards and `create_poll` renders a separate voting role. Both continue the conversation; selections have source IDs. Specific requests use known constraints; generic requests ask one useful question. These instructions guide the model; they are not a measured guarantee of live reasoning quality.
 
 Confirmed local orders can proceed to `/orders/[id]/payment`: a clearly labeled simulated card payment or cash-on-delivery choice, saved receipt, reload restoration, and payment status in subsequent agent context. No payment credentials are requested. Real checkout, stock reservation, tax, shipping quotes, coupons, multiple distinct-product cart lines, authenticated customers, webhooks, fulfillment, cancellation and refunds still require commerce services. See the Arabic research report delivered next to this repository for protocol references and a prioritized implementation plan.
+
+## TypeScript and formatting
+
+Application code, unit tests, and Playwright scenarios use TypeScript with strict checks. Shared types in `src/lib/types.ts` describe messages, commerce selections, orders, provider events, and archived threads. Incoming JSON remains runtime-validated. `npm run typecheck` checks the application and tests; `npm run format` formats code, and `npm run format:check` verifies formatting. `npm run check` runs formatting, lint, types, unit tests, and the production build.
